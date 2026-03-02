@@ -1,6 +1,6 @@
-name: "dragee-scan-action"
-description: "A Github action to scan code with Dragee.io"
-author: "dragee-io"
+name: "entropy-scan-action"
+description: "A Github action to scan code with Fixentropy.io"
+author: "fixentropy-io"
 
 branding:
   icon: 'activity'
@@ -17,7 +17,7 @@ inputs:
     description: "GitHub token for authentication"
     required: true
   backend-url:
-    description: "The Dragee backend URL"
+    description: "The Fixentropy backend URL"
     required: false
     default: "https://app.fixentropy.io/api"
 
