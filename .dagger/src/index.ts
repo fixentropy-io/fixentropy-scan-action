@@ -77,7 +77,7 @@ export class FixentropyCi {
       .withExec([
         "bash",
         "-lc",
-        "git clone -b feat/push-report https://$GITHUB_TOKEN@github.com/fixentropy-io/fixentropy-cli.git fixentropy-cli",
+        "git clone https://$GITHUB_TOKEN@github.com/fixentropy-io/fixentropy-cli.git fixentropy-cli",
       ])
       .withWorkdir("/work/fixentropy-cli")
       .withMountedCache("/root/.bun", bunCache)
