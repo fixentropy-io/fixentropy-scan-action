@@ -40,13 +40,16 @@ export class FixentropyCi {
    * @param grapher Whether to enable grapher mode
    * @returns Array of command arguments
    */
-  private buildCommandArgs(from: string, grapher?: boolean): string[] {
+  private buildCommandArgs(from: string, publish?: boolean): string[] {
     const args = [
       "/cli/dist/fixentropy-linux",
       "report",
       "--from",
       path.posix.join("/src", from),
     ];
+    if (publish) {
+      args.push("--publish");
+    }
     return args;
   }
 
@@ -164,7 +167,7 @@ export class FixentropyCi {
       ctr = ctr
         .withMountedDirectory("/tmp/asserters", asserterDir)
         .withEnvVariable(
-          "fixentropy_ASSERTER_LOCAL_REGISTRY_PATH",
+          "FIXENTROPY_ASSERTER_LOCAL_REGISTRY_PATH",
           "/tmp/asserters",
         );
     }
@@ -178,7 +181,7 @@ export class FixentropyCi {
     }
 
     const scanRoot = path.posix.resolve("/", from);
-    const args = this.buildCommandArgs(scanRoot);
+    const args = this.buildCommandArgs(scanRoot, true);
 
     ctr = ctr.withExec(args);
 
