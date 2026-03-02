@@ -2,6 +2,10 @@ name: "dragee-scan-action"
 description: "A Github action to scan code with Dragee.io"
 author: "dragee-io"
 
+branding:
+  icon: 'activity'
+  color: 'purple'
+
 inputs:
   asserter:
     description: "The asserter to use <org>/<asserter>"
