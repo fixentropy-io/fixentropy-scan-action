@@ -9,19 +9,43 @@ inputs:
   from:
     description: "The path to scan"
     required: true
+  github-token:
+    description: "GitHub token for authentication"
+    required: true
+  backend-url:
+    description: "The Dragee backend URL"
+    required: false
+    default: "https://app.fixentropy.io/api"
+
+permissions:
+  id-token: write
+  contents: read
 
 runs:
   using: "composite"
   steps:
-    - name: Run Dragee Scan
-      shell: bash
-      env:
-        DRAGEE_ASSERTER_LOCAL_REGISTRY_PATH: /tmp/asserters
-      run: |
-        git clone "https://${{ env.GITHUB_TOKEN }}@github.com/${{ inputs.asserter }}.git" "${{ env.DRAGEE_ASSERTER_LOCAL_REGISTRY_PATH }}" || echo "No asserter provided"
-        ./dragee-cli report --from="/home/runner/work/my-repo${{ env.GITHUB_WORKSPACE }}${{ inputs.from }}"
+    - name: Get OIDC Token
+      id: oidc
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const token = await core.getIDToken("dragee");
+          core.setOutput("token", token);
 
-    - name: Upload Dragee Report
-      shell: bash
-      run: |
-        curl --fail -X POST -H "Content-Type: application/json" -d @./dragee-report.json "https://api.dragee.io/api/v1/reports/github/${{ env.DRAGEE_TOKEN }}"
+    - name: Dagger call run-scan
+      uses: dagger/dagger-for-github@v8.2.0
+      with:
+        module: ${{ github.action_path }}
+        call: >-
+          run-pipeline
+          --from "${{ inputs.from }}"
+          --asserter "${{ inputs.asserter }}"
+          --grapher
+          --github-token env:GITHUB_TOKEN
+          --oidc-token env:OIDC_TOKEN
+          --backend-url "${{ inputs.backend-url }}"
+          --source ${{ github.workspace }}
+        version: latest
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        OIDC_TOKEN: ${{ steps.oidc.outputs.token }}
