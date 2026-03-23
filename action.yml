@@ -10,9 +10,6 @@ inputs:
   asserter:
     description: "The asserter to use <org>/<asserter>"
     required: false
-  from:
-    description: "The path to scan"
-    required: true
   github-token:
     description: "GitHub token for authentication"
     required: true
@@ -20,7 +17,6 @@ inputs:
     description: "The Fixentropy backend URL"
     required: false
     default: "https://app.fixentropy.io/api"
-
 
 runs:
   using: "composite"
