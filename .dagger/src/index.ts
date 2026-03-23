@@ -14,15 +14,13 @@ import * as path from "path";
 export class FixentropyCi {
   /**
    * Validates and normalizes input parameters using Node.js utilities
-   * @param from Path to validate
    * @param asserter Optional asserter to validate
    * @returns Object with validated parameters
    */
   private validateInputs(
-    from: string,
     asserter?: string,
   ): { from: string; asserter?: string } {
-    const normalizedFrom = path.posix.normalize(from || ".");
+    const normalizedFrom = path.posix.normalize("/target/fixentropy/");
     const normalizedAsserter = asserter?.trim();
 
     return {
@@ -192,7 +190,6 @@ export class FixentropyCi {
 
   /**
    * Complete fixentropy pipeline that builds CLI, optionally fetches asserters, runs analysis, and uploads results
-   * @param from Path to scan relative to source directory
    * @param asserter Optional custom asserter repository in format "org/repo"
    * @param grapher Optional flag to enable grapher mode in the analysis
    * @param githubToken Optional GitHub token for private repository access
@@ -203,7 +200,6 @@ export class FixentropyCi {
    */
   @func()
   async runPipeline(
-    from: string,
     asserter?: string,
     grapher?: boolean,
     githubToken?: Secret,
@@ -212,7 +208,7 @@ export class FixentropyCi {
     source?: Directory,
   ): Promise<string> {
     const { from: validatedFrom, asserter: validatedAsserter } =
-      this.validateInputs(from, asserter);
+      this.validateInputs(asserter);
 
     const cliDir: Directory = await this.buildCli(githubToken);
 

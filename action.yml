@@ -39,7 +39,6 @@ runs:
         module: ${{ github.action_path }}
         call: >-
           run-pipeline
-          --from "${{ inputs.from }}"
           --asserter "${{ inputs.asserter }}"
           --github-token env:GITHUB_TOKEN
           --oidc-token env:OIDC_TOKEN
