@@ -10,9 +10,6 @@ inputs:
   asserter:
     description: "The asserter to use <org>/<asserter>"
     required: false
-  github-token:
-    description: "GitHub token for authentication"
-    required: true
   backend-url:
     description: "The Fixentropy backend URL"
     required: false
@@ -36,11 +33,9 @@ runs:
         call: >-
           run-pipeline
           --asserter "${{ inputs.asserter }}"
-          --github-token env:GITHUB_TOKEN
           --oidc-token env:OIDC_TOKEN
           --backend-url "${{ inputs.backend-url }}"
           --source ${{ github.workspace }}
         version: latest
       env:
-        GITHUB_TOKEN: ${{ inputs.github-token }}
         OIDC_TOKEN: ${{ steps.oidc.outputs.token }}

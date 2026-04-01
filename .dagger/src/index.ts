@@ -6,7 +6,6 @@ import {
   Directory,
   File,
   CacheVolume,
-  Container,
 } from "@dagger.io/dagger";
 import * as path from "path";
 
@@ -40,7 +39,7 @@ export class FixentropyCi {
    */
   private buildCommandArgs(from: string, publish?: boolean): string[] {
     const args = [
-      "/cli/dist/fixentropy-linux",
+      "/cli/cli.sh",
       "report",
       "--from",
       path.posix.join("/src", from),
@@ -49,44 +48,6 @@ export class FixentropyCi {
       args.push("--publish");
     }
     return args;
-  }
-
-  /**
-   * Builds the fixentropy CLI from the official repository
-   * @param githubToken Optional GitHub token for private repository access
-   * @returns Directory containing the built CLI with executable at /dist/fixentropy-linux
-   */
-  @func()
-  async buildCli(githubToken?: Secret): Promise<Directory> {
-    const bunCache: CacheVolume = dag.cacheVolume("bun-cache");
-    const aptCache: CacheVolume = dag.cacheVolume("apt-cache");
-
-    let ctr: Container = dag
-      .container()
-      .from("oven/bun:1.3.3")
-      .withMountedCache("/var/cache/apt", aptCache)
-      .withExec([
-        "bash",
-        "-lc",
-        "apt-get update && apt-get install -y git ca-certificates",
-      ])
-      .withWorkdir("/work");
-
-    if (githubToken) ctr = ctr.withSecretVariable("GITHUB_TOKEN", githubToken);
-
-    ctr = ctr
-      .withExec([
-        "bash",
-        "-lc",
-        "git clone https://$GITHUB_TOKEN@github.com/fixentropy-io/fixentropy-cli.git fixentropy-cli",
-      ])
-      .withWorkdir("/work/fixentropy-cli")
-      .withMountedCache("/root/.bun", bunCache)
-      .withExec(["bun", "install"])
-      .withExec(["bun", "run", "build:linux"])
-      .withExec(["chmod", "+x", "./dist/fixentropy-linux"]);
-
-    return ctr.directory("/work/fixentropy-cli");
   }
 
   /**
@@ -127,7 +88,7 @@ export class FixentropyCi {
   /**
    * Runs fixentropy analysis and generates a report
    * @param from Path to scan relative to source directory
-   * @param cli Directory containing the built fixentropy CLI
+    * @param cli Directory containing the bundled fixentropy CLI binaries
    * @param oidcToken Required OIDC token for fixentropy.io uploads
    * @param backendUrl Optional fixentropy.io backend URL
    * @param asserterDir Optional directory containing custom asserters
@@ -181,6 +142,7 @@ export class FixentropyCi {
     const scanRoot = path.posix.resolve("/", from);
     const args = this.buildCommandArgs(scanRoot, true);
 
+    ctr = ctr.withExec(["chmod", "+x", "-R", "/cli"]);
     ctr = ctr.withExec(args);
 
     return ctr.file(
@@ -189,10 +151,9 @@ export class FixentropyCi {
   }
 
   /**
-   * Complete fixentropy pipeline that builds CLI, optionally fetches asserters, runs analysis, and uploads results
+    * Complete fixentropy pipeline that uses bundled CLI binaries, optionally fetches asserters, runs analysis, and uploads results
    * @param asserter Optional custom asserter repository in format "org/repo"
    * @param grapher Optional flag to enable grapher mode in the analysis
-   * @param githubToken Optional GitHub token for private repository access
    * @param oidcToken Required OIDC token for fixentropy.io uploads
    * @param backendUrl Optional fixentropy.io backend URL
    * @param source Optional source directory to scan (defaults to the current module source)
@@ -202,20 +163,14 @@ export class FixentropyCi {
   async runPipeline(
     asserter?: string,
     grapher?: boolean,
-    githubToken?: Secret,
     oidcToken?: Secret,
     backendUrl?: string,
     source?: Directory,
   ): Promise<string> {
-    const { from: validatedFrom, asserter: validatedAsserter } =
-      this.validateInputs(asserter);
+    const { from: validatedFrom } = this.validateInputs(asserter);
 
-    const cliDir: Directory = await this.buildCli(githubToken);
-
-    let asserterDir: Directory | undefined = undefined;
-    if (validatedAsserter) {
-      asserterDir = await this.fetchAsserter(validatedAsserter, githubToken);
-    }
+    const cliDir = dag.currentModule().source().directory("bin");
+    const asserterDir: Directory | undefined = undefined;
 
     if (!oidcToken)
       throw new Error("OIDC token is required for fixentropy.io uploads");
