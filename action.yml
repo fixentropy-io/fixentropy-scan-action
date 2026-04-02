@@ -10,6 +10,10 @@ inputs:
   asserter:
     description: "The asserter to use <org>/<asserter>"
     required: false
+  source:
+    description: "The source directory to scan"
+    required: false
+    default: ""
   backend-url:
     description: "The Fixentropy backend URL"
     required: false
@@ -35,7 +39,8 @@ runs:
           --asserter "${{ inputs.asserter }}"
           --oidc-token env:OIDC_TOKEN
           --backend-url "${{ inputs.backend-url }}"
-          --source ${{ github.workspace }}
+          --cli-source ${{ github.action_path }}/bin
+          --source "${{ inputs.source || github.workspace }}"
         version: latest
       env:
         OIDC_TOKEN: ${{ steps.oidc.outputs.token }}

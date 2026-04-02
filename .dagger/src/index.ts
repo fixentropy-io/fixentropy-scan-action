@@ -156,6 +156,7 @@ export class FixentropyCi {
    * @param grapher Optional flag to enable grapher mode in the analysis
    * @param oidcToken Required OIDC token for fixentropy.io uploads
    * @param backendUrl Optional fixentropy.io backend URL
+   * @param cliSource Optional directory containing bundled CLI binaries (defaults to module source bin/)
    * @param source Optional source directory to scan (defaults to the current module source)
    * @returns Status message indicating completion or local file path
    */
@@ -165,11 +166,12 @@ export class FixentropyCi {
     grapher?: boolean,
     oidcToken?: Secret,
     backendUrl?: string,
+    cliSource?: Directory,
     source?: Directory,
   ): Promise<string> {
     const { from: validatedFrom } = this.validateInputs(asserter);
 
-    const cliDir = dag.currentModule().source().directory("bin");
+    const cliDir = cliSource ?? dag.currentModule().source().directory("bin");
     const asserterDir: Directory | undefined = undefined;
 
     if (!oidcToken)

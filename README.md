@@ -46,6 +46,7 @@ jobs:
 | Parameter     | Type       | Required | Default                         | Description                                                                                                                     |
 | :------------ | :--------- | :------- | :------------------------------ | :------------------------------------------------------------------------------------------------------------------------------ |
 | `asserter`    | **string** | No       | N/A                             | The asserter to use, formatted as `<org>/<asserter>`. If omitted, default asserters may be used based on project configuration. |
+| `source`      | **string** | No       | `${{ github.workspace }}`       | The source directory to scan.                                                                                                   |
 | `backend-url` | **string** | No       | `https://app.fixentropy.io/api` | The Fixentropy backend URL. You usually don't need to change this unless you are using a self-hosted instance.                  |
 
 ## Permissions
