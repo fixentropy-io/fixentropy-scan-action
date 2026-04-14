@@ -6,6 +6,7 @@ A GitHub Action to scan your code with [Fixentropy.io](https://fixentropy.io). T
 
 - Scans your codebase using specific Fixentropy asserters.
 - Securely authenticates with Fixentropy using GitHub OIDC tokens limitating the need for long-lived secrets.
+- Uses bundled CLI binaries from `bin/` through `bin/cli.sh` (no build/download during action run).
 - Runs in an isolated environment powered by Dagger.
 
 ## Usage
@@ -37,19 +38,16 @@ jobs:
       - name: Run Fixentropy Scan
         uses: fixentropy-io/scan-action@v1 # Replace with the correct reference/version
         with:
-          from: "."
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           asserter: "my-org/my-asserter" # Optional: Specify the asserter if needed
 ```
 
 ## Inputs
 
-| Parameter      | Type       | Required | Default                         | Description                                                                                                                     |
-| :------------- | :--------- | :------- | :------------------------------ | :------------------------------------------------------------------------------------------------------------------------------ |
-| `from`         | **string** | **Yes**  | N/A                             | The relative path in your repository to scan. e.g., `.` for the root directory, or `src/` for a specific folder.                |
-| `github-token` | **string** | **Yes**  | N/A                             | GitHub token for authentication. Usually `${{ secrets.GITHUB_TOKEN }}`.                                                         |
-| `asserter`     | **string** | No       | N/A                             | The asserter to use, formatted as `<org>/<asserter>`. If omitted, default asserters may be used based on project configuration. |
-| `backend-url`  | **string** | No       | `https://app.fixentropy.io/api` | The Fixentropy backend URL. You usually don't need to change this unless you are using a self-hosted instance.                  |
+| Parameter     | Type       | Required | Default                         | Description                                                                                                                     |
+| :------------ | :--------- | :------- | :------------------------------ | :------------------------------------------------------------------------------------------------------------------------------ |
+| `asserter`    | **string** | No       | N/A                             | The asserter to use, formatted as `<org>/<asserter>`. If omitted, default asserters may be used based on project configuration. |
+| `source`      | **string** | No       | `${{ github.workspace }}`       | The source directory to scan.                                                                                                   |
+| `backend-url` | **string** | No       | `https://app.fixentropy.io/api` | The Fixentropy backend URL. You usually don't need to change this unless you are using a self-hosted instance.                  |
 
 ## Permissions
 
@@ -92,3 +90,4 @@ on:
 
 - **OIDC Token Error:** Ensure your job explicitly declares `permissions: { id-token: write, contents: read }`.
 - **Dagger Execution Failed:** The action relies on Dagger. Make sure your GitHub runners can execute Docker containers, as Dagger uses containers to isolate the pipeline execution.
+- **Binary Not Executable:** Ensure files in `bin/` keep executable permissions, especially `bin/cli.sh` and platform binaries.
